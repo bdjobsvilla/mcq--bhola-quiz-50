@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>গণিত কুইজ - ডিসি অফিস নিয়োগ প্রস্তুতি</title>
+    <style>
+        body { font-family: 'SolaimanLipi', Arial, sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-container { background: #fff; width: 95%; max-width: 650px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 3px solid #27ae60; padding-bottom: 10px; margin-top: 0; }
+        .question { font-size: 1.3rem; margin-bottom: 20px; font-weight: bold; color: #34495e; min-height: 60px; }
+        .options { display: grid; gap: 12px; }
+        .option-btn { padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; background: #fff; cursor: pointer; transition: 0.2s; text-align: left; font-size: 1.1rem; }
+        .option-btn:hover { background: #f1f9f5; border-color: #2ecc71; }
+        .correct { background-color: #2ecc71 !important; color: white; border-color: #27ae60; }
+        .wrong { background-color: #e74c3c !important; color: white; border-color: #c0392b; }
+        .score-board { display: flex; justify-content: space-between; font-weight: bold; color: #7f8c8d; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        #next-btn { display: none; margin-top: 25px; width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
+        #result-area { text-align: center; display: none; }
+        .restart-btn { padding: 12px 25px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-box">
+    <div class="score-board">
+        <span>প্রশ্ন: <span id="current-idx">1</span>/50</span>
+        <span>স্কোর: <span id="score">0</span></span>
+    </div>
+    <div id="quiz-content">
+        <div class="question" id="question-text">প্রশ্ন লোড হচ্ছে...</div>
+        <div class="options" id="options-container"></div>
+        <button id="next-btn" onclick="loadNextQuestion()">পরবর্তী প্রশ্ন →</button>
+    </div>
+    <div id="result-area">
+        <h2>কুইজ সম্পন্ন হয়েছে!</h2>
+        <p style="font-size: 1.8rem; color: #2c3e50;">আপনার স্কোর: <span id="final-score">0</span> / 50</p>
+        <button class="restart-btn" onclick="location.reload()">আবার চেষ্টা করুন</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "১. ১ থেকে ১০০ পর্যন্ত মৌলিক সংখ্যা কয়টি?", a: ["২২টি", "২৫টি", "২৬টি", "২৭টি"], c: 1 },
+        { q: "২. কোনো সংখ্যার ০.১ বাগ ও ০.০১ বাগের পার্থক্য ১ হলে সংখ্যাটি কত?", a: ["১০", "১০০", "১০০০", "১১০"], c: 1 },
+        { q: "৩. x+y=12 এবং x-y=2 হলে, xy এর মান কত?", a: ["৩৫", "২৪", "২০", "৩০"], c: 0 },
+        { q: "৪. ০.৩ × ০.০৩ × ০.০০৩ = কত?", a: ["০.০০০২৭", "০.০০০০২৭", "০.০০০৮১", "০.০০০০৮১"], c: 1 },
+        { q: "৫. বৃত্তের ব্যাস ৩ গুণ বৃদ্ধি করলে ক্ষেত্রফল কত গুণ বাড়বে?", a: ["৩ গুণ", "৬ গুণ", "৯ গুণ", "১২ গুণ"], c: 2 },
+        { q: "৬. ১ থেকে ৯৯ পর্যন্ত সংখ্যার যোগফল কত?", a: ["৪৯৫০", "৫০৫০", "৪৮৫০", "৪৭৫০"], c: 0 },
+        { q: "৭. ৩, ৯, ২৭... ধারাটির পরবর্তী পদ কোনটি?", a: ["৫১", "৬৪", "৮১", "২৪৩"], c: 2 },
+        { q: "৮. একটি সমকোণী ত্রিভুজের অতিভুজ ১৩ সেমি, ভূমি ১২ সেমি হলে লম্ব কত?", a: ["৫ সেমি", "৬ সেমি", "৭ সেমি", "৮ সেমি"], c: 0 },
+        { q: "৯. টাকায় ৩টি করে আম কিনে টাকায় ২টি করে বিক্রি করলে লাভের হার কত?", a: ["৩৩.৩৩%", "৫০%", "২৫%", "২০%"], c: 1 },
+        { q: "১০. চতুর্ভুজের চার কোণের সমষ্টি কত?", a: ["১৮০°", "২৭০°", "৩৬০°", "৪০০°"], c: 2 },
+        { q: "১১. নিচের কোনটি মৌলিক সংখ্যা?", a: ["৯", "৪৭", "৬৩", "৮৭"], c: 1 },
+        { q: "১২. ১০% লাভে বিক্রয়মূল্য ১১০ টাকা হলে ক্রয়মূল্য কত?", a: ["৮০ টাকা", "৯০ টাকা", "১০০ টাকা", "১০৫ টাকা"], c: 2 },
+        { q: "১৩. লসাগু এর পূর্ণরূপ কী?", a: ["লঘিষ্ঠ সাধারণ গুণক", "লঘিষ্ঠ সাধারণ গুণিতক", "লঘিষ্ঠ সাধারণ গুণ", "কোনোটিই নয়"], c: 1 },
+        { q: "১৪. ভাজক ১০, ভাগফল ৫ এবং ভাগশেষ ২ হলে ভাজ্য কত?", a: ["৫২", "২৫", "২০", "৭০"], c: 0 },
+        { q: "১৫. (a+b)² এর সূত্র কোনটি?", a: ["a²+2ab+b²", "a²-2ab+b²", "a²+b²", "(a-b)²+2ab"], c: 0 },
+        { q: "১৬. কোনো সংখ্যার ৩ গুণ থেকে ৮ বিয়োগ করলে ১০ হয়?", a: ["৪", "৫", "৬", "৭"], c: 2 },
+        { q: "১৭. পিতা ও পুত্রের বর্তমান বয়সের সমষ্টি ৫০ বছর। ১০ বছর পর তাদের বয়স কত হবে?", a: ["৬০", "৭০", "৮০", "৬৫"], c: 1 },
+        { q: "১৮. ১টি কলমের দাম ৫ টাকা হলে ১ ডজন কলমের দাম কত?", a: ["৫০ টাকা", "৫৫ টাকা", "৬০ টাকা", "৬৫ টাকা"], c: 2 },
+        { q: "১৯. সমবাহু ত্রিভুজের প্রতিটি কোণের মান কত?", a: ["৯০°", "৪৫°", "৬০°", "৩০°"], c: 2 },
+        { q: "২০. ০.৫ এর শতকরা ৫০ কত?", a: ["০.২৫", "২.৫", "০.০৫", "০.৫"], c: 0 },
+        { q: "২১. ১২ এর গুণনীয়ক কয়টি?", a: ["৪টি", "৫টি", "৬টি", "৭টি"], c: 2 },
+        { q: "২২. ত্রিভুজের ক্ষেত্রফল নির্ণয়ের সূত্র কী?", a: ["দৈর্ঘ্য × প্রস্থ", "১/২ × ভূমি × উচ্চতা", "ভূমি × উচ্চতা", "পরিধি/২"], c: 1 },
+        { q: "২৩. ১ ইঞ্চি সমান কত সেন্টিমিটার?", a: ["২.৫৪", "২.৫০", "৩.৫৪", "১.৫৪"], c: 0 },
+        { q: "২৪. ক:খ = ৪:৫ এবং খ:গ = ২:৩ হলে ক:খ:গ = ?", a: ["৪:৫:৬", "৮:১০:১৫", "৮:১০:১২", "৪:১০:১৫"], c: 1 },
+        { q: "২৫. একটি সরলরেখার ওপর অঙ্কিত বর্গের ক্ষেত্রফল ওই সরলরেখার অর্ধেক এর ওপর অঙ্কিত বর্গের কত গুণ?", a: ["২ গুণ", "৩ গুণ", "৪ গুণ", "৮ গুণ"], c: 2 },
+        { q: "২৬. (x-5)(x+5) = কত?", a: ["x²+25", "x²-25", "x²-10x+25", "x²+5"], c: 1 },
+        { q: "২৭. ১০০ টাকার ৫ বছরের সুদ ২০ টাকা হলে সুদের হার কত?", a: ["৪%", "৫%", "৬%", "২%"], c: 0 },
+        { q: "২৮. সম্পূরক কোণের মান কত?", a: ["৯০°", "১৮০°", "৩৬০°", "১০০°"], c: 1 },
+        { q: "২৯. ২, ৫, ১০, ১৭... ধারাটির পরবর্তী পদ কত?", a: ["২৪", "২৫", "২৬", "২৭"], c: 2 },
+        { q: "৩০. এক কুড়ি সমান কয়টি?", a: ["১২টি", "২০টি", "২৪টি", "৫০টি"], c: 1 },
+        { q: "৩১. ৪ জন শ্রমিক ১টি কাজ ১২ দিনে করলে ৮ জন শ্রমিক কত দিনে করবে?", a: ["৬ দিনে", "৪ দিনে", "৮ দিনে", "১০ দিনে"], c: 0 },
+        { q: "৩২. ১ থেকে ১০ পর্যন্ত বিজোড় সংখ্যার গড় কত?", a: ["৪", "৫", "৬", "৩"], c: 1 },
+        { q: "৩৩. ৩:৫ এর সমতুল অনুপাত কোনটি?", a: ["৬:১০", "৩:১০", "৫:৩", "৯:১২"], c: 0 },
+        { q: "৩৪. বৃত্তের কেন্দ্রগামী জ্যা-কে কী বলা হয়?", a: ["ব্যাসার্ধ", "পরিধি", "ব্যাাস", "চাপ"], c: 2 },
+        { q: "৩৫. বর্গের প্রতি বাহু ৫ সেমি হলে ক্ষেত্রফল কত?", a: ["১০ বর্গ সেমি", "২০ বর্গ সেমি", "২৫ বর্গ সেমি", "১৫ বর্গ সেমি"], c: 2 },
+        { q: "৩৬. ৪ এর বর্গমূল কত?", a: ["১৬", "২", "৮", "১"], c: 1 },
+        { q: "৩৭. ১ মিলিমিটার সমান কত মিটার?", a: ["০.১", "০.০১", "০.০০১", "০.০০০১"], c: 2 },
+        { q: "৩৮. ৪/৫ কে শতকরায় প্রকাশ করলে কত হবে?", a: ["৪০%", "৮০%", "৫০%", "৬০%"], c: 1 },
+        { q: "৩৯. একটি ত্রিভুজের কয়টি শীর্ষবিন্দু থাকে?", a: ["১টি", "২টি", "৩টি", "৪টি"], c: 2 },
+        { q: "৪০. a³-b³ এর সূত্র কোনটি?", a: ["(a-b)(a²+ab+b²)", "(a+b)(a²-ab+b²)", "(a-b)³", "a³+b³"], c: 0 },
+        { q: "৪১. ৯টি সংখ্যার গড় ১০। নতুন ১টি সংখ্যা যোগ করায় গড় ১১ হলে নতুন সংখ্যাটি কত?", a: ["১০", "১১", "২০", "১২"], c: 2 },
+        { q: "৪২. ঘড়িতে যখন ৩টা বাজে তখন ঘণ্টা ও মিনিটের কাঁটার মধ্যবর্তী কোণ কত?", a: ["৪৫°", "৯০°", "৬০°", "১৮০°"], c: 1 },
+        { q: "৪৩. ১ কেজি কত গ্রামের সমান?", a: ["১০০ গ্রাম", "৫০০ গ্রাম", "১০০০ গ্রাম", "১২০০ গ্রাম"], c: 2 },
+        { q: "৪৪. কোনো সংখ্যার অর্ধেক ১০ হলে সংখ্যাটি কত?", a: ["৫", "২০", "১৫", "২৫"], c: 1 },
+        { q: "৪৫. সমকোণী ত্রিভুজের বৃহত্তম বাহুকে কী বলে?", a: ["ভূমি", "লম্ব", "অতিভুজ", "জ্যা"], c: 2 },
+        { q: "৪৬. ১ হালি কলার দাম ২০ টাকা হলে ৫টি কলার দাম কত?", a: ["২৫ টাকা", "৩০ টাকা", "১৫ টাকা", "৪০ টাকা"], c: 0 },
+        { q: "৪৭. ১৬ এর বর্গ কত?", a: ["৪", "৩২", "২৫৬", "১২৮"], c: 2 },
+        { q: "৪৮. ৩, ৪ ও ৫ এর লসাগু কত?", a: ["১২", "১৫", "২০", "৬০"], c: 3 },
+        { q: "৪৯. রম্বসের চার কোণের সমষ্টি কত?", a: ["১৮০°", "৩৬০°", "৯০°", "২৭০°"], c: 1 },
+        { q: "৫০. ০ এর সাথে কোনো সংখ্যা গুণ করলে গুণফল কত হয়?", a: ["ঐ সংখ্যা", "১", "০", "অসীম"], c: 2 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answered = false;
+
+    function loadQuestion() {
+        answered = false;
+        const currentQ = quizData[currentIdx];
+        document.getElementById("current-idx").innerText = currentIdx + 1;
+        document.getElementById("question-text").innerText = currentQ.q;
+        const container = document.getElementById("options-container");
+        container.innerHTML = "";
+        document.getElementById("next-btn").style.display = "none";
+
+        currentQ.a.forEach((opt, i) => {
+            const btn = document.createElement("button");
+            btn.innerText = opt;
+            btn.classList.add("option-btn");
+            btn.onclick = () => check(i, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function check(idx, btn) {
+        if (answered) return;
+        answered = true;
+        const correct = quizData[currentIdx].c;
+        const btns = document.querySelectorAll(".option-btn");
+
+        if (idx === correct) {
+            btn.classList.add("correct");
+            score++;
+            document.getElementById("score").innerText = score;
+        } else {
+            btn.classList.add("wrong");
+            btns[correct].classList.add("correct");
+        }
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function loadNextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById("quiz-content").style.display = "none";
+            document.getElementById("result-area").style.display = "block";
+            document.getElementById("final-score").innerText = score;
+        }
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>

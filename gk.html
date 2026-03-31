@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সাধারণ জ্ঞান কুইজ - ডিসি অফিস নিয়োগ প্রস্তুতি</title>
+    <style>
+        body { font-family: 'SolaimanLipi', Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-container { background: #fff; width: 95%; max-width: 650px; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 5px solid #8e44ad; }
+        h2 { color: #2c3e50; text-align: center; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .question { font-size: 1.25rem; margin-bottom: 20px; font-weight: bold; color: #34495e; min-height: 50px; }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 14px; border: 2px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; transition: 0.2s; text-align: left; font-size: 1.05rem; }
+        .option-btn:hover { background: #f3e5f5; border-color: #8e44ad; }
+        .correct { background-color: #27ae60 !important; color: white; border-color: #219150; }
+        .wrong { background-color: #e74c3c !important; color: white; border-color: #c0392b; }
+        .score-board { display: flex; justify-content: space-between; font-weight: bold; color: #7f8c8d; margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+        #next-btn { display: none; margin-top: 20px; width: 100%; padding: 15px; background: #8e44ad; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: bold; }
+        #result-area { text-align: center; display: none; }
+        .restart-btn { padding: 12px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-box">
+    <div class="score-board">
+        <span>প্রশ্ন: <span id="current-idx">1</span>/50</span>
+        <span>স্কোর: <span id="score">0</span></span>
+    </div>
+    <div id="quiz-content">
+        <div class="question" id="question-text">লোড হচ্ছে...</div>
+        <div class="options" id="options-container"></div>
+        <button id="next-btn" onclick="loadNextQuestion()">পরবর্তী প্রশ্ন →</button>
+    </div>
+    <div id="result-area">
+        <h2>কুইজ সম্পন্ন!</h2>
+        <p style="font-size: 1.8rem; color: #2c3e50;">আপনার মোট স্কোর: <span id="final-score">0</span> / 50</p>
+        <button class="restart-btn" onclick="location.reload()">আবার শুরু করুন</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "১. বাংলাদেশের জাতীয় পতাকার দৈর্ঘ্য ও প্রস্থের অনুপাত কত?", a: ["৫:৩", "১০:৬", "৩:২", "সবগুলো সঠিক"], c: 3 },
+        { q: "২. ভোলার প্রাচীন নাম কী ছিল?", a: ["চন্দ্রদ্বীপ", "দক্ষিণ শাহবাজপুর", "হরিকেল", "সমতট"], c: 1 },
+        { q: "৩. বাংলাদেশের একমাত্র প্রবাল দ্বীপ কোনটি?", a: ["সেন্টমার্টিন", "কুতুবদিয়া", "মহেশখালী", "হাতিয়া"], c: 0 },
+        { q: "৪. বাংলাদেশের বিজয় দিবস কবে পালন করা হয়?", a: ["২৬ মার্চ", "১৪ ডিসেম্বর", "১৬ ডিসেম্বর", "২১ ফেব্রুয়ারি"], c: 2 },
+        { q: "৫. আয়তনে বাংলাদেশের বৃহত্তম জেলা কোনটি?", a: ["বান্দরবান", "রাঙামাটি", "চট্টগ্রাম", "ভোলা"], c: 1 },
+        { q: "৬. বাংলাদেশের জাতীয় সংগীতের রচয়িতা কে?", a: ["কাজী নজরুল ইসলাম", "রবীন্দ্রনাথ ঠাকুর", "জসীমউদ্দীন", "জীবনানন্দ দাশ"], c: 1 },
+        { q: "৭. পদ্মা ও যমুনা নদী কোথায় মিলিত হয়েছে?", a: ["চাঁদপুর", "গোয়ালন্দ", "ভৈরব", "আরিচা"], c: 1 },
+        { q: "৮. বাংলাদেশের সংবিধান কার্যকর হয় কত সালে?", a: ["১৯৭১", "১৯৭২", "১৯৭৩", "১৯৭৫"], c: 1 },
+        { q: "৯. ভোলার বুক চিরে প্রবাহিত প্রধান নদী কোনটি?", a: ["পদ্মা", "মেঘনা", "যমুনা", "ব্রহ্মপুত্র"], c: 1 },
+        { q: "১০. পৃথিবীর বৃহত্তম বদ্বীপ কোনটি?", a: ["ভারত", "শ্রীলঙ্কা", "বাংলাদেশ", "গ্রিনল্যান্ড"], c: 2 },
+        { q: "১১. বাংলাদেশের রাষ্ট্রীয় মনোগ্রামের ডিজাইনার কে?", a: ["কামরুল হাসান", "এ এন এ সাহা", "হামিদুর রহমান", "নিতুন কুণ্ডু"], c: 1 },
+        { q: "১২. কেন্দ্রীয় শহীদ মিনারের স্থপতি কে?", a: ["হামিদুর রহমান", "মাইনুল হোসেন", "তানভীর কবির", "মোস্তফা মনোয়ার"], c: 0 },
+        { q: "১৩. স্বাধীন বাংলাদেশের প্রথম প্রেসিডেন্ট কে ছিলেন?", a: ["সৈয়দ নজরুল ইসলাম", "তাজউদ্দীন আহমদ", "মনসুর আলী", "এ এইচ এম কামরুজ্জামান"], c: 0 },
+        { q: "১৪. সুন্দরবন কয়টি জেলা জুড়ে বিস্তৃত?", a: ["৩টি", "৪টি", "৫টি", "৬টি"], c: 2 },
+        { q: "১৫. আয়তনে বিশ্বের ক্ষুদ্রতম দেশ কোনটি?", a: ["মোনাকো", "মালদ্বীপ", "ভ্যাটিকান সিটি", "সান মারিনো"], c: 2 },
+        { q: "১৬. রাশিয়ার মুদ্রার নাম কী?", a: ["ইউরো", "রুবল", "ডলার", "পাউন্ড"], c: 1 },
+        { q: "১৭. জাপানের পার্লামেন্টের নাম কী?", a: ["ডায়েট", "নেসেট", "সিনেট", "কংগ্রেস"], c: 0 },
+        { q: "১৮. ক্যাটালোনিয়া কোন দেশের একটি প্রদেশ?", a: ["ফ্রান্স", "ইতালি", "স্পেন", "জার্মানি"], c: 2 },
+        { q: "১৯. এসডিজি (SDG) এর লক্ষ্যমাত্রা কয়টি?", a: ["১৫টি", "১৬টি", "১৭টি", "১৮টি"], c: 2 },
+        { q: "২০. পৃথিবীর ছাদ বলা হয় কোন মালভূমিকে?", a: ["পামির", "তিব্বত", "ডেকান", "আরব"], c: 0 },
+        { q: "২১. ইন্টারপোলের সদর দপ্তর কোথায়?", a: ["প্যারিস", "লিয়ঁ", "জেনেভা", "নিউইয়র্ক"], c: 1 },
+        { q: "২২. নোবেল পুরস্কার দেওয়া শুরু হয় কত সাল থেকে?", a: ["১৯০১", "১৯১০", "১৯১১", "১৯২০"], c: 0 },
+        { q: "২৩. সূর্য থেকে পৃথিবীতে আলো আসতে সময় লাগে প্রায়-", a: ["৭ মিনিট", "৮ মিনিট ২০ সেকেন্ড", "৯ মিনিট", "১০ মিনিট"], c: 1 },
+        { q: "২৪. কম্পিউটারের মস্তিষ্ক বলা হয় কোন অংশকে?", a: ["RAM", "Monitor", "CPU", "Hard Disk"], c: 2 },
+        { q: "২৫. বাংলাদেশের প্রথম ডিজিটাল জেলা কোনটি?", a: ["ঢাকা", "যশোর", "সিলেট", "চট্টগ্রাম"], c: 1 },
+        { q: "২৬. ফেসবুকের প্রতিষ্ঠাতা কে?", a: ["বিল গেটস", "স্টিভ জবস", "মার্ক জাকারবার্গ", "জ্যাক ডরসি"], c: 2 },
+        { q: "২৭. বিশ্ব পরিবেশ দিবস কবে?", a: ["৫ জুন", "৭ এপ্রিল", "১ মে", "১০ ডিসেম্বর"], c: 0 },
+        { q: "২৮. বাংলাদেশের সর্বোচ্চ পাহাড়ের নাম কী?", a: ["কেওক্রাডং", "তাজিংডং", "গারো পাহাড়", "লালমাই"], c: 1 },
+        { q: "২৯. আন্তর্জাতিক মাতৃভাষা দিবস কবে?", a: ["২১ ফেব্রুয়ারি", "২৬ মার্চ", "১৬ ডিসেম্বর", "১৪ এপ্রিল"], c: 0 },
+        { q: "৩০. হিলসা গবেষণা কেন্দ্র কোথায় অবস্থিত?", a: ["ভোলা", "বরিশাল", "চাঁদপুর", "পটুয়াখালী"], c: 2 },
+        { q: "৩১. বাংলাদেশের দ্বিতীয় বৃহত্তম জেলা কোনটি?", a: ["চট্টগ্রাম", "খুলনা", "সিলেট", "ময়মনসিংহ"], c: 0 },
+        { q: "৩২. দক্ষিণ এশিয়ার বৃহত্তম সেতু কোনটি?", a: ["পদ্মা সেতু", "যমুনা সেতু", "ভৈরব সেতু", "হার্ডিঞ্জ ব্রিজ"], c: 0 },
+        { q: "৩৩. পদ্মা সেতুর দৈর্ঘ্য কত কিমি?", a: ["৬.১৫ কিমি", "৫.১৫ কিমি", "৭.১৫ কিমি", "৬.৫০ কিমি"], c: 0 },
+        { q: "৩৪. সার্ক (SAARC) এর সদর দপ্তর কোথায়?", a: ["ঢাকা", "দিল্লি", "কাঠমান্ডু", "ইসলামাবাদ"], c: 2 },
+        { q: "৩৫. এশিয় উন্নয়ন ব্যাংক (ADB) এর সদর দপ্তর কোথায়?", a: ["ম্যানিলা", "টোকিও", "বেইজিং", "ব্যাংকক"], c: 0 },
+        { q: "৩৬. বাংলাদেশের কোন জেলায় সবচেয়ে বেশি চা বাগান আছে?", a: ["সিলেট", "মৌলভীবাজার", "হবিগঞ্জ", "পঞ্চগড়"], c: 1 },
+        { q: "৩৭. আয়তনে বিশ্বের বৃহত্তম দেশ কোনটি?", a: ["চীন", "রাশিয়া", "কানাডা", "যুক্তরাষ্ট্র"], c: 1 },
+        { q: "৩৮. স্ট্যাচু অফ লিবার্টি কোথায় অবস্থিত?", a: ["লন্ডন", "প্যারিস", "নিউইয়র্ক", "ওয়াশিংটন"], c: 2 },
+        { q: "৩৯. মানুষের শরীরের স্বাভাবিক তাপমাত্রা কত?", a: ["৯৮.৪° ফারেনহাইট", "৯৭.৪° ফারেনহাইট", "৯৯.৪° ফারেনহাইট", "৯৬.৪° ফারেনহাইট"], c: 0 },
+        { q: "৪০. রক্তের গ্রুপ কয়টি?", a: ["২টি", "৩টি", "৪টি", "৫টি"], c: 2 },
+        { q: "৪১. বাংলাদেশের বীরশ্রেষ্ঠ কতজন?", a: ["৫ জন", "৭ জন", "১১ জন", "৯ জন"], c: 1 },
+        { q: "৪২. জাতীয় স্মৃতিসৌধের উচ্চতা কত ফুট?", a: ["১৫০ ফুট", "১৫৫ ফুট", "১৬০ ফুট", "১৬৫ ফুট"], c: 0 },
+        { q: "৪৩. জাতীয় স্মৃতিসৌধের স্থপতি কে?", a: ["মাইনুল হোসেন", "তানভীর কবির", "কামরুল হাসান", "মোস্তফা মনোয়ার"], c: 0 },
+        { q: "৪৪. মুজিবনগর সরকার গঠিত হয়েছিল কবে?", a: ["১০ এপ্রিল ১৯৭১", "১৭ এপ্রিল ১৯৭১", "২৬ মার্চ ১৯৭১", "৭ মার্চ ১৯৭১"], c: 0 },
+        { q: "৪৫. বাংলাদেশ ও মায়ানমারকে বিভক্তকারী নদী কোনটি?", a: ["নাফ", "মেঘনা", "পদ্মা", "সাঙ্গু"], c: 0 },
+        { q: "৪৬. বাংলাদেশের কুয়েত সিটি বলা হয় কোন জেলাকে?", a: ["ভোলা", "খুলনা", "চাঁদপুর", "বরিশাল"], c: 1 },
+        { q: "৪৭. বাংলাদেশের প্রবেশদ্বার বলা হয় কোন শহরকে?", a: ["ঢাকা", "সিলেট", "চট্টগ্রাম", "রাজশাহী"], c: 2 },
+        { q: "৪৮. গ্রিনউইচ মান সময় অপেক্ষা বাংলাদেশের সময় কত ঘণ্টা বেশি?", a: ["৪ ঘণ্টা", "৫ ঘণ্টা", "৬ ঘণ্টা", "৭ ঘণ্টা"], c: 2 },
+        { q: "৪৯. বাংলাদেশের জাতীয় পাখির নাম কী?", a: ["দোয়েল", "ময়না", "টিয়া", "শালিক"], c: 0 },
+        { q: "৫০. 'দ্বীপের রানী' বলা হয় কোন জেলাকে?", a: ["পটুয়াখালী", "ভোলা", "নোয়াখালী", "বরগুনা"], c: 1 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answered = false;
+
+    function loadQuestion() {
+        answered = false;
+        const currentQ = quizData[currentIdx];
+        document.getElementById("current-idx").innerText = currentIdx + 1;
+        document.getElementById("question-text").innerText = currentQ.q;
+        const container = document.getElementById("options-container");
+        container.innerHTML = "";
+        document.getElementById("next-btn").style.display = "none";
+
+        currentQ.a.forEach((opt, i) => {
+            const btn = document.createElement("button");
+            btn.innerText = opt;
+            btn.classList.add("option-btn");
+            btn.onclick = () => check(i, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function check(idx, btn) {
+        if (answered) return;
+        answered = true;
+        const correct = quizData[currentIdx].c;
+        const btns = document.querySelectorAll(".option-btn");
+
+        if (idx === correct) {
+            btn.classList.add("correct");
+            score++;
+            document.getElementById("score").innerText = score;
+        } else {
+            btn.classList.add("wrong");
+            btns[correct].classList.add("correct");
+        }
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function loadNextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            document.getElementById("quiz-content").style.display = "none";
+            document.getElementById("result-area").style.display = "block";
+            document.getElementById("final-score").innerText = score;
+        }
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>নিয়োগ প্রস্তুতি - ভোলা ডিসি অফিস</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-container { background: #fff; width: 90%; max-width: 600px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .question { font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; color: #34495e; }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 12px; border: 2px solid #dfe6e9; border-radius: 8px; background: #fff; cursor: pointer; transition: 0.3s; text-align: left; font-size: 1rem; }
+        .option-btn:hover { background: #f0f3f5; border-color: #b2bec3; }
+        .correct { background-color: #2ecc71 !important; color: white; border-color: #27ae60; }
+        .wrong { background-color: #e74c3c !important; color: white; border-color: #c0392b; }
+        .score-board { text-align: right; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; }
+        #next-btn { display: none; margin-top: 20px; width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+        #result-area { text-align: center; display: none; }
+        .restart-btn { padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-box">
+    <div class="score-board">প্রশ্ন: <span id="current-idx">1</span>/50 | স্কোর: <span id="score">0</span></div>
+    <div id="quiz-content">
+        <div class="question" id="question-text">লোড হচ্ছে...</div>
+        <div class="options" id="options-container"></div>
+        <button id="next-btn" onclick="loadNextQuestion()">পরবর্তী প্রশ্ন</button>
+    </div>
+    <div id="result-area">
+        <h2>পরীক্ষা শেষ!</h2>
+        <p style="font-size: 1.5rem;">আপনার মোট স্কোর: <span id="final-score">0</span> / 50</p>
+        <button class="restart-btn" onclick="location.reload()">আবার শুরু করুন</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "১. 'কবর' নাটকটি কার রচনা?", a: ["রবীন্দ্রনাথ ঠাকুর", "মুনীর চৌধুরী", "নজরুল ইসলাম", "জসীমউদ্দীন"], c: 1 },
+        { q: "২. 'সূর্য' শব্দের সমার্থক শব্দ কোনটি?", a: ["সুধাংশু", "আদিত্য", "শশাঙ্ক", "বিধু"], c: 1 },
+        { q: "৩. কোনটি শুদ্ধ বানান?", a: ["মুমূর্ষু", "মুমূর্ষ", "মূমর্ষু", "মুমুর্ষু"], c: 0 },
+        { q: "৪. 'অগ্নিবীণা' কাব্যগ্রন্থের রচয়িতা কে?", a: ["জীবনানন্দ দাশ", "কাজী নজরুল ইসলাম", "ফররুখ আহমদ", "কায়কোবাদ"], c: 1 },
+        { q: "৫. সন্ধি বিচ্ছেদ করুন: 'গায়ক'?", a: ["গা + অক", "গৈ + অক", "গে + অক", "গা + ইয়ক"], c: 1 },
+        { q: "৬. 'হাতটান' বাগধারাটির অর্থ কি?", a: ["চুরির অভ্যাস", "কৃপণতা", "অলসতা", "দানশীলতা"], c: 0 },
+        { q: "৭. বাংলা সাহিত্যের প্রাচীনতম নিদর্শন কোনটি?", a: ["শ্রীকৃষ্ণকীর্তন", "চর্যাপদ", "পদ্মাবতী", "বৈষ্ণব পদাবলী"], c: 1 },
+        { q: "৮. 'মেঘের গর্জন' এক কথায় কী হবে?", a: ["গুঞ্জন", "মন্দ্র", "কেকা", "হ্রেষা"], c: 1 },
+        { q: "৯. কারক কত প্রকার?", a: ["৪ প্রকার", "৫ প্রকার", "৬ প্রকার", "৭ প্রকার"], c: 2 },
+        { q: "১০. 'সমাস' শব্দের অর্থ কী?", a: ["বিচ্ছেদ", "সংক্ষেপণ", "বিশ্লেষণ", "সংযোজন"], c: 1 },
+        { q: "১১. 'চাঁদের হাট' অর্থ কী?", a: ["প্রিয়জন সমাগম", "অসম্ভব বস্তু", "বিপজ্জনক স্থান", "ধনী ব্যক্তি"], c: 0 },
+        { q: "১২. নিচের কোনটি তদ্ভব শব্দ?", a: ["চন্দ্র", "হস্ত", "চাঁদ", "সূর্য"], c: 2 },
+        { q: "১৩. 'একাদশে বৃহস্পতি' এর অর্থ কী?", a: ["অশুভ লক্ষণ", "সুসময়", "দুঃসময়", "বাধা"], c: 1 },
+        { q: "১৪. বিভক্তিহীন নাম শব্দকে কী বলা হয়?", a: ["ধাতু", "প্রাতিপদিক", "উপসর্গ", "অনুসর্গ"], c: 1 },
+        { q: "১৫. 'তপোবন' কোন সমাস?", a: ["দ্বন্দ্ব", "বহুব্রীহি", "তৎপুরুষ", "চতুর্থী তৎপুরুষ"], c: 3 },
+        { q: "১৬. 'রক্তাক্ত প্রান্তর' নাটকটি কার?", a: ["মুনীর চৌধুরী", "শওকত ওসমান", "সেলিম আল দীন", "আনোয়ার পাশা"], c: 0 },
+        { q: "১৭. 'আবল-তাবল' কার রচনা?", a: ["সুকুমার রায়", "সত্যজিৎ রায়", "উপেন্দ্রকিশোর", "রবীন্দ্রনাথ"], c: 0 },
+        { q: "১৮. 'উপকারির উপকার স্বীকার করে যে'?", a: ["উপকারী", "কৃতজ্ঞ", "কৃতঘ্ন", "সদাশয়"], c: 1 },
+        { q: "১৯. বীরবল কার ছদ্মনাম?", a: ["প্রমথ চৌধুরী", "বঙ্কিমচন্দ্র", "শরৎচন্দ্র", "রবীন্দ্রনাথ"], c: 0 },
+        { q: "২০. নিচের কোনটি স্ত্রীবাচক শব্দ?", a: ["কুলটা", "কবিরাজ", "ঢাকি", "কৃতদার"], c: 0 },
+        { q: "২১. 'অক্ষির সমীপে' এক কথায় কী?", a: ["পরোক্ষ", "প্রত্যক্ষ", "সমক্ষ", "উপলক্ষ"], c: 1 },
+        { q: "২২. 'পথের প্যাঁচালী' উপন্যাসের রচয়িতা?", a: ["বিভূতিভূষণ বন্দ্যোপাধ্যায়", "তারাশঙ্কর", "মানিক বন্দ্যোপাধ্যায়", "শরৎচন্দ্র"], c: 0 },
+        { q: "২৩. খাঁটি বাংলা উপসর্গ কয়টি?", a: ["২০টি", "২১টি", "১৯টি", "২২টি"], c: 1 },
+        { q: "২৪. 'চপল' এর বিপরীত শব্দ কোনটি?", a: ["গম্ভীর", "স্থির", "বাচাল", "ধীর"], c: 0 },
+        { q: "২৫. 'অশ্রু' শব্দের প্রতিশব্দ কোনটি?", a: ["বারি", "লোচন", "নেত্রজল", "সলিল"], c: 2 },
+        { q: "২৬. 'আমড়াগাছি করা' বলতে কী বোঝায়?", a: ["ফাঁকি দেওয়া", "তোষামোদ করা", "সময় নষ্ট করা", "ভয় দেখানো"], c: 1 },
+        { q: "২৭. বাংলা গদ্যের জনক কে?", a: ["ঈশ্বরচন্দ্র বিদ্যাসাগর", "প্যারীচাঁদ মিত্র", "বঙ্কিমচন্দ্র", "রবীন্দ্রনাথ"], c: 0 },
+        { q: "২৮. 'মনীষা' শব্দের সন্ধি বিচ্ছেদ?", a: ["মন + ইষা", "মনস্ + ঈষা", "মনি + ইষা", "মনঃ + ঈষা"], c: 1 },
+        { q: "২৯. কোনটি মৌলিক শব্দ?", a: ["গোলাপ", "মহাকাশ", "গায়ক", "নীলিমা"], c: 0 },
+        { q: "৩০. 'বিরাম চিহ্ন' কেন ব্যবহৃত হয়?", a: ["বাক্যের সৌন্দর্য বাড়াতে", "অর্থ স্পষ্ট করতে", "বাক্য বড় করতে", "ছন্দ মিলাতে"], c: 1 },
+        { q: "৩১. 'রাজলক্ষ্মী' চরিত্রের স্রষ্টা কে?", a: ["বঙ্কিমচন্দ্র", "রবীন্দ্রনাথ", "শরৎচন্দ্র", "মানিক বন্দ্যোপাধ্যায়"], c: 2 },
+        { q: "৩২. 'তন্ময়' শব্দের সন্ধি বিচ্ছেদ?", a: ["তৎ + ময়", "তদ + ময়", "তন + ময়", "তথা + ময়"], c: 0 },
+        { q: "৩৩. 'গোবর গণেশ' অর্থ কী?", a: ["মূর্তিময়", "ভণ্ড", "অকর্মণ্য", "চালাক"], c: 2 },
+        { q: "৩৪. 'নীল যে অম্বর = নীলাম্বর' কোন সমাস?", a: ["কর্মধারয়", "তৎপুরুষ", "দ্বন্দ্ব", "অব্যয়ভাব"], c: 0 },
+        { q: "৩৫. বাংলা বর্ণমালায় স্বরবর্ণ কয়টি?", a: ["৯টি", "১০টি", "১১টি", "১২টি"], c: 2 },
+        { q: "৩৬. কোনটি দেশি শব্দ?", a: ["কুলা", "আনারস", "টেবিল", "কলম"], c: 0 },
+        { q: "৩৭. 'জীবনানন্দ দাশ' প্রধানত কোন যুগের কবি?", a: ["মধ্যযুগ", "আধুনিক যুগ", "প্রাচীন যুগ", "অন্ধকার যুগ"], c: 1 },
+        { q: "৩৮. 'শেষের কবিতা' একটি?", a: ["কবিতা", "নাটক", "উপন্যাস", "ছোটগল্প"], c: 2 },
+        { q: "৩৯. 'বচন' অর্থ কী?", a: ["কথা", "সংখ্যার ধারণা", "বিবৃতি", "গণনা"], c: 1 },
+        { q: "৪০. 'উদ্ধত' এর বিপরীত শব্দ?", a: ["বিনীত", "উগ্র", "শান্ত", "নম্র"], c: 0 },
+        { q: "৪১. 'ধাতু' কয় প্রকার?", a: ["২ প্রকার", "৩ প্রকার", "৪ প্রকার", "৫ প্রকার"], c: 1 },
+        { q: "৪২. কোনটি অলুক দ্বন্দ্ব সমাস?", a: ["মা-বাবা", "দুধে-ভাতে", "ভাই-বোন", "হাট-বাজার"], c: 1 },
+        { q: "৪৩. 'বিষাদ সিন্ধু' কার রচনা?", a: ["মীর মশাররফ হোসেন", "কায়কোবাদ", "নজরুল", "বেগম রোকেয়া"], c: 0 },
+        { q: "৪৪. শুদ্ধ বানান কোনটি?", a: ["সমীচিন", "সমীচীন", "সমিচীন", "সমিচিন"], c: 1 },
+        { q: "৪৫. 'ব্যাঙের আধুলি' মানে কী?", a: ["সামান্য সম্পদ", "অসম্ভব ঘটনা", "অল্প বুদ্ধি", "অহংকার"], c: 0 },
+        { q: "৪৬. পদ কত প্রকার?", a: ["৩ প্রকার", "৪ প্রকার", "৫ প্রকার", "৬ প্রকার"], c: 2 },
+        { q: "৪৭. 'মাছরাঙা' কোন সমাস?", a: ["উপপদ তৎপুরুষ", "বহুব্রীহি", "ষষ্ঠী তৎপুরুষ", "দ্বিগু"], c: 0 },
+        { q: "৪৮. 'বাংলা একাডেমি' কত সালে প্রতিষ্ঠিত হয়?", a: ["১৯৫২", "১৯৫৫", "১৯৬০", "১৯৭১"], c: 1 },
+        { q: "৪৯. 'চলিত ভাষা'র প্রবর্তক কে?", a: ["রবীন্দ্রনাথ", "প্রমথ চৌধুরী", "প্যারীচাঁদ মিত্র", "বিদ্যাসাগর"], c: 1 },
+        { q: "৫০. 'যা অতি দীর্ঘ নয়' এক কথায়?", a: ["নাতিদীর্ঘ", "হ্রস্ব", "ক্ষুদ্র", "দীর্ঘ নয়"], c: 0 }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    function loadQuestion() {
+        answered = false;
+        const currentQuestion = quizData[currentQuestionIndex];
+        document.getElementById("current-idx").innerText = currentQuestionIndex + 1;
+        document.getElementById("question-text").innerText = currentQuestion.q;
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+        document.getElementById("next-btn").style.display = "none";
+
+        currentQuestion.a.forEach((option, index) => {
+            const button = document.createElement("button");
+            button.innerText = option;
+            button.classList.add("option-btn");
+            button.onclick = () => checkAnswer(index, button);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIndex, button) {
+        if (answered) return;
+        answered = true;
+        const correctIndex = quizData[currentQuestionIndex].c;
+        const allButtons = document.querySelectorAll(".option-btn");
+
+        if (selectedIndex === correctIndex) {
+            button.classList.add("correct");
+            score++;
+            document.getElementById("score").innerText = score;
+        } else {
+            button.classList.add("wrong");
+            allButtons[correctIndex].classList.add("correct");
+        }
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function loadNextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById("quiz-content").style.display = "none";
+        document.getElementById("result-area").style.display = "block";
+        document.getElementById("final-score").innerText = score;
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
